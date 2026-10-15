@@ -1,0 +1,11 @@
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
