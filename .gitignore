@@ -1,11 +1,29 @@
+# Secrets
 .env
 .env.*
-*.log
-*.tmp
-*.bak
+*.key
+*.pem
+*.token
+credentials*
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
-dist/
-build/
+
+# Runtime data
+data/
+cache/
+logs/
+*.log
+
+# Docker/runtime artifacts
+volumes/
+docker-data/
+
+# Temporary files
+*.tmp
+*.bak
+*~

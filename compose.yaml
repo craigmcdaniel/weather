@@ -1,0 +1,67 @@
+services:
+
+  weather:
+    build:
+      context: .
+    image: thoth-weather:0.1
+    container_name: thoth-weather
+    restart: unless-stopped
+
+    environment:
+      WEATHER_STATION: ${WEATHER_STATION:?WEATHER_STATION must be set}
+      WEATHER_PORT: "9190"
+      WEATHER_BIND: "0.0.0.0"
+      WEATHER_CACHE: /data/latest.json
+      WEATHER_USER_AGENT: THOTH-Weather-Appliance/0.1
+
+    volumes:
+      - weather-cache:/data
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    container_name: thoth-weather-prometheus
+    restart: unless-stopped
+
+    depends_on:
+      - weather
+
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=1y
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+    ports:
+      - "127.0.0.1:9091:9090"
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: thoth-weather-grafana
+    restart: unless-stopped
+
+    depends_on:
+      - prometheus
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: thoth-weather
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/thoth-weather.json
+
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+    ports:
+      - "3001:3000"
+
+volumes:
+  weather-cache:
+  prometheus-data:
+  grafana-data:
